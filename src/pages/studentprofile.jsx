@@ -95,7 +95,7 @@ const StudentProfile = () => {
                 <Link to="/main">
                     <img src="style/images/sau-logo-rms.png" className="logo" alt="Logo" />
                 </Link>
-                <h2>Student Profile</h2>
+                
                 <nav className="header-nav">
                     <Link to="/dashboard" className="nav-link">Dashboard</Link>
                     <Link to="/studentprofile" className="nav-link active">Student Profile</Link>

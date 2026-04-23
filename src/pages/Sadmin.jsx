@@ -103,7 +103,7 @@ const Sadmin = () => {
                 <div className="header-container">
                     <div className="header-left">
                         <Link to="/main"><img src="/style/images/sau-logo-rms.png" className="logo" alt="Logo" /></Link>
-                        <div className="brand-text"><h1>PamSU-SAU RMS</h1></div>
+                        
                     </div>
                     <nav className="header-nav">
                         <Link to="/main" className="nav-link">Main View</Link>
