@@ -81,7 +81,7 @@ const Main = () => {
                 <div className="header-container">
                     <div className="header-left">
                         <img src="/style/images/sau-logo-rms.png" className="logo" alt="Logo" />
-                        <div className="brand-text"><h1>PamSU-SAU RMS</h1></div>
+                        
                     </div>
                     <nav className="header-nav">
                         <Link to="/main" className={`nav-link ${window.location.pathname === '/main' ? 'active' : ''}`}>Main View</Link>

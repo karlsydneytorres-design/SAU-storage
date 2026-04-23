@@ -24,7 +24,7 @@ const Logs = () => {
         <div className="header-container">
           <div className="header-left">
             <img src="/style/images/sau-logo-rms.png" className="logo" alt="Logo" />
-            <h1 className="system-title">PamSU-SAU RMS</h1>
+            
           </div>
           
           <nav className="header-nav">
