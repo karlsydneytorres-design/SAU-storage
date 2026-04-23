@@ -1,0 +1,21 @@
+:root {
+    /* --- Primary Colors --- */
+    --maroon: #800000;
+    --maroon-dark: #600000; /* For button hover states */
+    
+    /* --- Neutral Colors --- */
+    --bg: #f4f4f4;
+    --white: #ffffff;
+    --gray-light: #dddddd;
+    --gray-text: #666666;
+
+    /* --- Feedback Colors --- */
+    --success: #155724;
+    --success-bg: #d4edda;
+    --error: #721c24;
+    --error-bg: #f8d7da;
+
+    /* --- Effects --- */
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}

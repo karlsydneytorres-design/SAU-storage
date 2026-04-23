@@ -1,0 +1,119 @@
+/* Ensure these match your main.css exactly */
+
+.app-header {
+  background-color: #800000;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.header-container {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.university-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-logo-img {
+  height: 45px;
+  width: auto;
+}
+
+.pamsu-branding, .unit-branding {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.7rem;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.vertical-divider {
+  width: 1px;
+  height: 35px;
+  background-color: rgba(255, 255, 255, 0.4);
+  margin: 0 5px;
+}
+
+.system-acronym {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+/* Nav & Active State */
+.header-right-section {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 8px 12px;
+}
+
+.nav-link.active {
+  background-color: white;
+  color: #800000; /* Maroon text on white box */
+  border-radius: 4px;
+}
+
+/* Admin Pill */
+.admin-pill {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 4px 12px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.admin-label {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  line-height: 1;
+}
+
+.label-top { font-size: 0.65rem; font-weight: 900; }
+.label-bottom { font-size: 0.55rem; font-weight: 700; opacity: 0.8; }
+
+.admin-avatar {
+  background: white;
+  color: #800000;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+}

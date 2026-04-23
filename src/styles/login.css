@@ -1,0 +1,126 @@
+/* Center the card on the screen */
+.login-page-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 100vh;
+    background-color: #f3f3f3;
+}
+
+/* The white box */
+.login-card {
+    width: 420px !important; /* Fixed width */
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: block !important; /* Force it to be a block container */
+}
+
+/* Maroon Header Area */
+.login-header {
+    background-color: #800000 !important;
+    color: #ffffff !important;
+    padding: 35px 20px;
+    text-align: center;
+    display: block !important;
+}
+
+.brand-title {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.brand-subtitle {
+    margin: 10px 0 0;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* Form Styling */
+.login-form {
+    padding: 30px 40px;
+    display: block !important; /* Ensures form elements stack vertically */
+}
+
+.form-group {
+    margin-bottom: 20px;
+    display: block !important; /* FORCES stacking */
+    width: 100%;
+}
+
+.form-group label {
+    display: block !important;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #333;
+    text-align: left;
+}
+
+/* Input Containers */
+.password-wrapper {
+    position: relative;
+    display: block !important;
+    width: 100%;
+}
+
+input {
+    width: 100% !important; /* Forces input to fill the row */
+    padding: 12px 15px !important;
+    border: 1px solid #cccccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box !important; /* Prevents padding from breaking width */
+    display: block !important;
+}
+
+/* Button Styling */
+.login-btn {
+    width: 100% !important;
+    padding: 14px !important;
+    background-color: #800000 !important;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+    display: block !important;
+}
+
+/* Register link section */
+.register-section {
+    text-align: center;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #eeeeee;
+    display: block !important;
+    width: 100%;
+}
+
+.register-btn {
+    display: block !important; /* Forces it to be a big button */
+    width: 100% !important;
+    padding: 12px !important;
+    margin-top: 10px;
+    border: 2px solid #800000 !important;
+    color: #800000 !important;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 700;
+    box-sizing: border-box !important;
+}
+
+.toggle-pass {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #800000;
+    cursor: pointer;
+}
