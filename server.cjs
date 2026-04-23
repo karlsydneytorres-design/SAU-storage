@@ -178,7 +178,35 @@ app.post('/api/save-bank-record', (req, res) => {
     // In a real app: db.query('INSERT INTO bank_info ... ON DUPLICATE KEY UPDATE ...')
     res.status(200).json({ success: true, message: "Record saved to server!" });
 });
+// Add this to your server.cjs
+app.post('/update-profile', (req, res) => {
+    const { id, name, email, password } = req.body;
 
+    // Build the query dynamically: only update password if provided
+    let query;
+    let params;
+
+    if (password && password.trim() !== "") {
+        query = `UPDATE users SET name = ?, email = ?, password = ? WHERE id = ?`;
+        params = [name, email, password, id];
+    } else {
+        query = `UPDATE users SET name = ?, email = ? WHERE id = ?`;
+        params = [name, email, id];
+    }
+
+    db.run(query, params, function(err) {
+        if (err) {
+            console.error(err.message);
+            return res.status(500).json({ success: false, message: "Database update failed." });
+        }
+        
+        if (this.changes === 0) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        res.json({ success: true, message: "Profile updated successfully." });
+    });
+});
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server is live on http://localhost:${PORT}`);
