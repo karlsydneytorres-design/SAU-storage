@@ -251,6 +251,107 @@ td {
   cursor: pointer;
   font-weight: 600;
 }
+/* Layout Container for the row */
+.action-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    width: 100%;
+}
+
+.search-wrapper {
+    flex: 1;
+}
+
+.search-input-main {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* Blue Import Box Styling */
+.import-container-main {
+    display: flex;
+    align-items: center;
+    background-color: #3498db; /* Your blue color */
+    border-radius: 5px;
+    padding: 4px;
+    border: 1px solid #2980b9;
+    min-width: 400px;
+}
+
+.import-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: white;
+    padding: 0 15px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.import-label i {
+    font-size: 16px;
+    margin-bottom: 2px;
+}
+
+.file-box-display {
+    background: white;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 3px;
+    border: 1px solid #fff;
+    height: 35px;
+}
+
+.choose-btn {
+    background: #f0f0f0;
+    border: 1px solid #adadad;
+    padding: 2px 8px;
+    font-size: 12px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.file-status {
+    font-size: 13px;
+    color: #666;
+    text-transform: uppercase;
+}
+
+/* Green Export Button Styling */
+.btn-export-green {
+    background-color: #27ae60; /* Your green color */
+    color: white;
+    border: 2px solid #000;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.btn-export-green:hover {
+    background-color: #219150;
+}
+
+/* Table Header Match */
+.custom-rms-table thead th {
+    background-color: #800000; /* Maroon */
+    color: white;
+    padding: 12px;
+    font-size: 12px;
+    text-transform: uppercase;
+    border: 1px solid #600000;
+}
 
 .acc-missing { color: #d9534f; font-weight: bold; }
 .acc-existing { color: #2ecc71; font-weight: bold; }
