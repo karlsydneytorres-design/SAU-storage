@@ -28,3 +28,5 @@ dist-ssr
 package-lock.json
 
 pamsu_sau.db
+
+.env
