@@ -48,23 +48,25 @@ const Register = () => {
                     name: formData.fullname, 
                     email: formData.email, 
                     password: formData.password, 
-                    role: 'Student' 
+                    role: 'Employee 3' // FIXED: Updated from 'Student' to 'Employee 3'
                 })
             });
 
             const data = await response.json();
 
             if (data.success) {
-                // Storing session info for use in the Main view
-                sessionStorage.setItem("temp_reg_id", studentId);
+                // Storing session info 
+                sessionStorage.setItem("userId", studentId);
                 sessionStorage.setItem("userName", formData.fullname);
-                sessionStorage.setItem("userRole", 'Student');
+                sessionStorage.setItem("userRole", 'Employee 3'); // FIXED: Updated to match role logic
 
                 // Log the successful registration
-                addLogEntry(formData.fullname, "REGISTER", `New student account created: ${studentId}`);
+                addLogEntry(formData.fullname, "REGISTER", `New employee 3 account created: ${studentId}`);
 
                 alert(`Welcome, ${formData.fullname}! Registration successful.`);
-                navigate('/main'); 
+                
+                // FIXED: Direct to dashboard instead of main
+                navigate('/dashboard'); 
             } else {
                 alert("Registration failed: " + data.message);
             }
@@ -76,7 +78,6 @@ const Register = () => {
 
     return (
         <div className="reg-container">
-            {/* Main card wrapper to match login style */}
             <div className="reg-card"> 
                 <header className="reg-header">
                     <h2>PamSU-SAU RMS</h2>
@@ -133,7 +134,7 @@ const Register = () => {
                     </div>
 
                     <button type="submit" className="reg-submit-btn">
-                        REGISTER & GO TO PROFILE
+                        REGISTER & GO TO DASHBOARD
                     </button>
 
                     <div className="reg-footer">

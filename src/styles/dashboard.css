@@ -1,27 +1,21 @@
-:root {
-  --maroon: #800000;
-  --dark-maroon: #400000;
-  --bg-grey: #f2f3f5;
-  --white: #ffffff;
-}
+/* Dashboard Specific Styles */
 
 .dashboard-container {
-  min-height: 100vh;
+  min-height: calc(100vh - 70px); /* Adjusts for header height */
   background: var(--bg-grey);
-  font-family: 'Open Sans', sans-serif;
   color: var(--dark-maroon);
 }
 
-/* ================= CONTAINER & CARDS ================= */
 .dashboard-content {
   max-width: 1300px;
   margin: 0 auto;
   padding: 2rem 25px;
 }
 
+/* ================= STAT CARDS ================= */
 .dashboard-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid */
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -43,9 +37,10 @@
 .stat-card h3 {
   margin: 0;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #666;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-card p {
@@ -75,20 +70,24 @@
 
 .campus-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem 3rem;
+}
+
+.campus-item {
+  margin-bottom: 10px;
 }
 
 .progress-container {
   background: #eee;
   border-radius: 10px;
-  height: 12px;
+  height: 14px;
   overflow: hidden;
   margin-top: 8px;
 }
 
 .progress-bar {
-  background: linear-gradient(90deg, #800000, #b22222);
+  background: linear-gradient(90deg, var(--maroon), #b22222);
   height: 100%;
   border-radius: 10px;
   transition: width 1s ease-in-out;

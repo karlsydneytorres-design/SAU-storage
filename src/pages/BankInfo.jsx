@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../styles/bankinfo.css';
+import '../styles/Main.css'; // Importing shared layout/header styles
 
 const BankInfo = () => {
     const navigate = useNavigate();
@@ -9,6 +10,10 @@ const BankInfo = () => {
     const [editIndex, setEditIndex] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
     
+    // User Context
+    const userName = sessionStorage.getItem("userName") || "USER";
+    const userRole = sessionStorage.getItem("userRole") || "Employee 2";
+
     // Filters
     const [filterCampus, setFilterCampus] = useState("ALL");
     const [filterStatus, setFilterStatus] = useState("all");
@@ -25,7 +30,7 @@ const BankInfo = () => {
         const logs = JSON.parse(localStorage.getItem("systemLogs")) || [];
         const newLog = {
             timestamp: new Date().toLocaleString(),
-            user: (sessionStorage.getItem("userName") || "ADMIN").toUpperCase(),
+            user: userName.toUpperCase(),
             action: action.toUpperCase(),
             details: details
         };
@@ -107,35 +112,39 @@ const BankInfo = () => {
         e.target.reset();
     };
 
+    const handleLogout = () => {
+        sessionStorage.clear();
+        navigate('/');
+    };
+
     return (
-        <div className="bank-info-page">
+        <div className="main-wrapper">
             <header className="app-header">
                 <div className="header-container">
                     <div className="header-left">
                         <img src="/style/images/sau-logo-rms.png" className="logo" alt="Logo" />
-                        
-                        
                     </div>
                     <nav className="header-nav">
-                        <Link to="/main" className="nav-link">Main View</Link>
-                        <Link to="/bankinfo" className="nav-link active">Bank Info</Link>
-                        <Link to="/sadmin" className="nav-link">User Control</Link>
+                            <Link to="/main" className="nav-link">Main View</Link>
+                            <Link to="/Sadmin" className="nav-link">User Control</Link>
+                            <Link to="/logs" className="nav-link">System Logs</Link>
+                            <Link to="/bankinfo" className="nav-link">Bank Info</Link>
+                            <Link to="/dashboard" className="nav-link">Dashboard</Link>
                     </nav>
                     <div className="header-right">
-                        <div className="user-badge" onClick={() => setShowDropdown(!showDropdown)}>
-                            <div className="user-details-text">
-                                <span id="welcomeName">{sessionStorage.getItem("userName") || "ADMIN"}</span>
-                                <span id="welcomeRole">SUPERADMIN</span>
+                        <div className="user-dropdown">
+                            <div className="user-badge" onClick={() => setShowDropdown(!showDropdown)}>
+                                <div className="user-details-text">
+                                    <span>{userName.toUpperCase()}</span>
+                                    <span>{userRole.toUpperCase()}</span>
+                                </div>
+                                <div className="user-avatar-small">{userName.charAt(0).toUpperCase()}</div>
+                                <span className="dropdown-arrow">▼</span>
                             </div>
-                            <div className="user-avatar-small">A</div>
+                            <div className={`dropdown-content ${showDropdown ? 'show' : ''}`}>
+                                <a href="#" onClick={handleLogout} className="logout-link">🚪 Logout</a>
+                            </div>
                         </div>
-                        {showDropdown && (
-                            <div className="dropdown-content show">
-                                <Link to="/settings">⚙️ Settings</Link>
-                                <hr />
-                                <a href="/" onClick={() => sessionStorage.clear()}>🚪 Logout</a>
-                            </div>
-                        )}
                     </div>
                 </div>
             </header>
@@ -327,7 +336,7 @@ const BankInfo = () => {
                                         <td>{formatAmount(bank.amount || student.amount)}</td>
                                         <td>{bank.dateReceived || "-"}</td>
                                         <td style={{ display: 'flex', gap: '5px' }}>
-                                            <button className="view" onClick={() => navigate(`/studentprofile?id=${student.studentId}`)} style={{ backgroundColor: '#007bff', color: 'white', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}>
+                                            <button className="view" onClick={() => navigate(`/studentprofile?id=${student.studentId}`)}>
                                                 View
                                             </button>
                                             <button className="edit" onClick={() => editBankRecord(student.studentId)}>

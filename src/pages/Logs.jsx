@@ -28,10 +28,11 @@ const Logs = () => {
           </div>
           
           <nav className="header-nav">
-            <Link to="/main" className={isActive('/main')}>Main View</Link>
-            <Link to="/bankinfo" className={isActive('/bankinfo')}>Bank Info</Link>
-            <Link to="/sadmin" className={isActive('/sadmin')}>User Control</Link>
-            <Link to="/logs" className={isActive('/logs')}>System Logs</Link>
+            <Link to="/main" className="nav-link">Main View</Link>
+            <Link to="/Sadmin" className="nav-link">User Control</Link>
+            <Link to="/logs" className="nav-link">System Logs</Link>
+            <Link to="/bankinfo" className="nav-link">Bank Info</Link>
+            <Link to="/dashboard" className="nav-link">Dashboard</Link>
           </nav>
 
           <div className="header-right">

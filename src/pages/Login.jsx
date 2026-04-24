@@ -31,25 +31,38 @@ const Login = () => {
         body: JSON.stringify({ username, password })
       });
       const data = await response.json();
+
       if (data.success) {
+        // Store user data in session
         sessionStorage.setItem("userId", data.user.id);     
         sessionStorage.setItem("userRole", data.user.role);
         sessionStorage.setItem("userName", data.user.name);
         
-        // Log the successful login
-        addLogEntry(data.user.name, "LOGIN", `User logged into the system via Login Page.`);
+        addLogEntry(data.user.name, "LOGIN", `User logged into the system.`);
 
-        if (data.user.role === 'Superadmin') {
+        // --- ROBUST ROLE-BASED NAVIGATION ---
+        // We normalize the string to handle any capitalization or spacing issues from the DB
+        const role = data.user.role.toLowerCase().trim();
+
+        if (role === 'employee 1') {
+          // Superadmin -> User Control
           navigate('/sadmin'); 
+        } else if (role === 'employee 2') {
+          // Admin -> Records Management
+          navigate('/main');
+        } else if (role === 'employee 3') {
+          // No Role/Student -> Direct to Dashboard
+          navigate('/dashboard');
         } else {
+          // Fallback for unexpected roles
           navigate('/main');
         }
       } else {
-        // Log the failed attempt
-        addLogEntry(username, "AUTH_FAIL", `Failed login attempt for ID/Username: ${username}`);
+        addLogEntry(username, "AUTH_FAIL", `Failed login attempt: ${username}`);
         alert(data.message || "Invalid credentials.");
       }
     } catch (error) {
+      console.error("Login error:", error);
       alert("Server connection failed.");
     }
   };
@@ -57,7 +70,6 @@ const Login = () => {
   return (
     <div className="login-page-wrapper">
       <div className="login-card">
-        {/* Header section with Maroon background */}
         <header className="login-header">
           <h1 className="brand-title">PamSU-SAU RMS</h1>
           <p className="brand-subtitle">Scholarship Affairs Unit Management System</p>

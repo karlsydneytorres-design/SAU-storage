@@ -107,8 +107,9 @@ const Sadmin = () => {
                     </div>
                     <nav className="header-nav">
                         <Link to="/main" className="nav-link">Main View</Link>
-                        <Link to="/sadmin" className="nav-link active">User Control</Link>
+                        <Link to="/Sadmin" className="nav-link">User Control</Link>
                         <Link to="/logs" className="nav-link">System Logs</Link>
+                        <Link to="/bankinfo" className="nav-link">Bank Info</Link>
                         <Link to="/dashboard" className="nav-link">Dashboard</Link>
                     </nav>
                     <div className="header-right">
