@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from '../supabase'; 
 import '../styles/Sadmin.css'; 
 
 const Sadmin = () => {
@@ -9,32 +10,29 @@ const Sadmin = () => {
     const [showDropdown, setShowDropdown] = useState(false);
 
     const userName = sessionStorage.getItem("userName") || "ADMIN";
-    const userRole = (sessionStorage.getItem("userRole") || "Superadmin");
+    const userRole = (sessionStorage.getItem("userRole") || "Employee 1");
 
-    // Helper to create logs
-    const addLogEntry = (action, details) => {
-        const logs = JSON.parse(localStorage.getItem("systemLogs")) || [];
-        const newLog = {
-            timestamp: new Date().toLocaleString(),
-            user: userName.toUpperCase(),
+    // Cloud-based Logging
+    const addLogEntry = async (action, details) => {
+        await supabase.from('system_logs').insert([{
+            user_name: userName.toUpperCase(),
             action: action.toUpperCase(),
             details: details
-        };
-        localStorage.setItem("systemLogs", JSON.stringify([newLog, ...logs]));
+        }]);
     };
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch('http://localhost:3000/users');
-            const data = await response.json();
-            
-            if (data.success && Array.isArray(data.users)) {
-                setUsers(data.users); 
-            } else {
-                setUsers([]); 
-            }
+            // Fetch all users from the public.users table
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setUsers(data || []);
         } catch (error) {
-            console.error("Connection error:", error);
+            console.error("Error fetching users:", error.message);
             setUsers([]); 
         }
     };
@@ -42,59 +40,49 @@ const Sadmin = () => {
     useEffect(() => { fetchUsers(); }, []);
 
     const updateUserRole = async (targetUserId, currentRole) => {
-        const newRole = currentRole === 'Admin' ? 'Student' : 'Admin';
-        if (!window.confirm(`Change user ${targetUserId} to ${newRole}?`)) return;
+        // Toggle between Employee 2 (Admin) and Employee 3 (Student)
+        const newRole = currentRole === 'Employee 2' ? 'Employee 3' : 'Employee 2';
+        if (!window.confirm(`Change user role to ${newRole}?`)) return;
         
         try {
-            const response = await fetch(`http://localhost:3000/update-role`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    targetUserId: targetUserId, 
-                    newRole: newRole,
-                    adminId: sessionStorage.getItem("userId") || "SA-001"
-                })
-            });
-            const data = await response.json();
-            if (data.success) {
-                addLogEntry("USER_UPDATE", `Updated role of User ${targetUserId} from ${currentRole} to ${newRole}`);
-                fetchUsers();
-            } else {
-                alert(data.message);
-            }
-        } catch (err) { alert("Update failed."); }
+            const { error } = await supabase
+                .from('users')
+                .update({ role: newRole })
+                .eq('id', targetUserId);
+
+            if (error) throw error;
+
+            await addLogEntry("USER_UPDATE", `Updated User ${targetUserId} to ${newRole}`);
+            fetchUsers();
+        } catch (err) { alert("Update failed: " + err.message); }
     };
 
     const deleteUser = async (targetUserId) => {
         if (!window.confirm(`Permanently delete user ${targetUserId}?`)) return;
         
         try {
-            const response = await fetch(`http://localhost:3000/delete-user`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    targetUserId: targetUserId,
-                    adminId: sessionStorage.getItem("userId") || "SA-001"
-                })
-            });
-            const data = await response.json();
-            if (data.success) {
-                addLogEntry("USER_DELETE", `Permanently deleted user account: ${targetUserId}`);
-                fetchUsers();
-            } else {
-                alert(data.message);
-            }
-        } catch (err) { alert("Delete failed."); }
+            // Note: This only deletes the profile. To delete the login, 
+            // you'd typically use an Edge Function, but for now, we remove the profile.
+            const { error } = await supabase
+                .from('users')
+                .delete()
+                .eq('id', targetUserId);
+
+            if (error) throw error;
+
+            await addLogEntry("USER_DELETE", `Deleted user account: ${targetUserId}`);
+            fetchUsers();
+        } catch (err) { alert("Delete failed: " + err.message); }
     };
 
     const filteredUsers = users.filter(u => 
-        `${u.id} ${u.name}`.toUpperCase().includes(search.toUpperCase())
+        `${u.email} ${u.name}`.toUpperCase().includes(search.toUpperCase())
     );
 
     const stats = {
         total: users.length,
-        admins: users.filter(u => u.role === "Admin" || u.role === "Superadmin").length,
-        students: users.filter(u => u.role === "Student").length
+        admins: users.filter(u => u.role === "Employee 1" || u.role === "Employee 2").length,
+        students: users.filter(u => u.role === "Employee 3").length
     };
 
     return (
@@ -103,7 +91,6 @@ const Sadmin = () => {
                 <div className="header-container">
                     <div className="header-left">
                         <Link to="/main"><img src="/style/images/sau-logo-rms.png" className="logo" alt="Logo" /></Link>
-                        
                     </div>
                     <nav className="header-nav">
                         <Link to="/main" className="nav-link">Main View</Link>
@@ -122,7 +109,7 @@ const Sadmin = () => {
                                 <div className="user-avatar-small">{userName.charAt(0)}</div>
                             </div>
                             <div className={`dropdown-content ${showDropdown ? 'show' : ''}`}>
-                                <a href="#" onClick={() => {sessionStorage.clear(); navigate('/');}}>Logout</a>
+                                <button className="logout-btn" onClick={() => {sessionStorage.clear(); navigate('/');}}>Logout</button>
                             </div>
                         </div>
                     </div>
@@ -138,23 +125,28 @@ const Sadmin = () => {
 
                 <div className="card">
                     <h3>System User Management</h3>
-                    <input className="search-box" placeholder="SEARCH BY ID OR NAME..." style={{width:'100%', padding:'10px', marginBottom:'15px'}} onChange={(e) => setSearch(e.target.value)} />
+                    <input 
+                        className="search-box" 
+                        placeholder="SEARCH BY EMAIL OR NAME..." 
+                        style={{width:'100%', padding:'10px', marginBottom:'15px'}} 
+                        onChange={(e) => setSearch(e.target.value)} 
+                    />
                     <table>
                         <thead>
-                            <tr><th>#</th><th>ID Number</th><th>Full Name</th><th>Role</th><th>Actions</th></tr>
+                            <tr><th>#</th><th>Email</th><th>Full Name</th><th>Role</th><th>Actions</th></tr>
                         </thead>
                         <tbody>
                             {filteredUsers.map((user, i) => (
                                 <tr key={user.id}>
                                     <td>{i + 1}</td>
-                                    <td>{user.id}</td>
+                                    <td>{user.email}</td>
                                     <td>{user.name}</td>
                                     <td>{user.role}</td>
                                     <td className="actions">
-                                        {user.role !== 'Superadmin' && (
+                                        {user.role !== 'Employee 1' && (
                                             <>
                                                 <button className="view" onClick={() => updateUserRole(user.id, user.role)}>
-                                                    {user.role === 'Admin' ? 'Demote' : 'Promote'}
+                                                    {user.role === 'Employee 2' ? 'Demote' : 'Promote'}
                                                 </button>
                                                 <button className="delete" onClick={() => deleteUser(user.id)} style={{marginLeft: '5px'}}>
                                                     Delete

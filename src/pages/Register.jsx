@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from '../supabase'; 
 import '../styles/variables.css';
 import '../styles/global.css';
 import '../styles/Register.css';
 
 const Register = () => {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         fullname: '',
         email: '',
@@ -13,66 +15,52 @@ const Register = () => {
         confirmPassword: ''
     });
 
-    // Helper to create logs
-    const addLogEntry = (userName, action, details) => {
-        const logs = JSON.parse(localStorage.getItem("systemLogs")) || [];
-        const newLog = {
-            timestamp: new Date().toLocaleString(),
-            user: userName.toUpperCase(),
-            action: action.toUpperCase(),
-            details: details
-        };
-        localStorage.setItem("systemLogs", JSON.stringify([newLog, ...logs]));
-    };
-
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     const handleRegister = async (e) => {
         e.preventDefault();
-
-        // Original logic: Generate ID from email (splitting at '@')
-        const studentId = formData.email.split('@')[0].toUpperCase();
-
         if (formData.password !== formData.confirmPassword) {
             return alert("Passwords do not match!");
         }
 
+        setLoading(true);
         try {
-            const response = await fetch('http://localhost:3000/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    id: studentId, 
-                    name: formData.fullname, 
-                    email: formData.email, 
-                    password: formData.password, 
-                    role: 'Employee 3' // FIXED: Updated from 'Student' to 'Employee 3'
-                })
+            // STEP 1: Create user in Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: formData.email,
+                password: formData.password,
             });
 
-            const data = await response.json();
+            if (authError) throw authError;
 
-            if (data.success) {
-                // Storing session info 
-                sessionStorage.setItem("userId", studentId);
+            if (authData.user) {
+                // STEP 2: Insert profile into public.users table
+                const { error: profileError } = await supabase
+                    .from('users')
+                    .insert([{
+                        id: authData.user.id, 
+                        name: formData.fullname,
+                        email: formData.email,
+                        role: 'Employee 3',
+                        student_id: formData.email.split('@')[0].toUpperCase()
+                    }]);
+
+                if (profileError) throw profileError;
+
+                // STEP 3: Set local session
+                sessionStorage.setItem("userId", authData.user.id);
                 sessionStorage.setItem("userName", formData.fullname);
-                sessionStorage.setItem("userRole", 'Employee 3'); // FIXED: Updated to match role logic
+                sessionStorage.setItem("userRole", 'Employee 3');
 
-                // Log the successful registration
-                addLogEntry(formData.fullname, "REGISTER", `New employee 3 account created: ${studentId}`);
-
-                alert(`Welcome, ${formData.fullname}! Registration successful.`);
-                
-                // FIXED: Direct to dashboard instead of main
-                navigate('/dashboard'); 
-            } else {
-                alert("Registration failed: " + data.message);
+                alert(`Welcome, ${formData.fullname}!`);
+                navigate('/dashboard');
             }
         } catch (error) {
-            console.error("Connection error:", error);
-            alert("Could not connect to the server. Make sure your backend is running.");
+            alert(error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -83,60 +71,26 @@ const Register = () => {
                     <h2>PamSU-SAU RMS</h2>
                     <p>Scholarship Affairs Unit Management System</p>
                 </header>
-
                 <form className="reg-form" onSubmit={handleRegister}>
                     <div className="form-group">
                         <label>Full Name</label>
-                        <input 
-                            type="text" 
-                            name="fullname"
-                            placeholder="LAST NAME, FIRST NAME" 
-                            value={formData.fullname}
-                            onChange={handleChange}
-                            required 
-                        />
+                        <input type="text" name="fullname" placeholder="LAST NAME, FIRST NAME" value={formData.fullname} onChange={handleChange} required />
                     </div>
-
                     <div className="form-group">
                         <label>Institutional Email</label>
-                        <input 
-                            type="email" 
-                            name="email"
-                            placeholder="IDNUMBER@PAMSU.EDU.PH" 
-                            value={formData.email}
-                            onChange={handleChange}
-                            required 
-                        />
+                        <input type="email" name="email" placeholder="IDNUMBER@PAMSU.EDU.PH" value={formData.email} onChange={handleChange} required />
                     </div>
-
                     <div className="form-group">
                         <label>Password</label>
-                        <input 
-                            type="password" 
-                            name="password"
-                            placeholder="ENTER PASSWORD"
-                            value={formData.password}
-                            onChange={handleChange}
-                            required 
-                        />
+                        <input type="password" name="password" placeholder="ENTER PASSWORD" value={formData.password} onChange={handleChange} required />
                     </div>
-
                     <div className="form-group">
                         <label>Confirm Password</label>
-                        <input 
-                            type="password" 
-                            name="confirmPassword"
-                            placeholder="CONFIRM PASSWORD"
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            required 
-                        />
+                        <input type="password" name="confirmPassword" placeholder="CONFIRM PASSWORD" value={formData.confirmPassword} onChange={handleChange} required />
                     </div>
-
-                    <button type="submit" className="reg-submit-btn">
-                        REGISTER & GO TO DASHBOARD
+                    <button type="submit" className="reg-submit-btn" disabled={loading}>
+                        {loading ? "CREATING ACCOUNT..." : "REGISTER & GO TO DASHBOARD"}
                     </button>
-
                     <div className="reg-footer">
                         <Link to="/">Already have an account? Login</Link>
                     </div>

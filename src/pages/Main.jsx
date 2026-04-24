@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Added useEffect
 import { useNavigate, Link } from 'react-router-dom';
+import { supabase } from '../supabase'; // Import your supabase client
 import * as XLSX from 'xlsx';
 import '../styles/Main.css'; 
 
@@ -7,11 +8,13 @@ const Main = () => {
     const navigate = useNavigate();
     
     // --- STATE MANAGEMENT ---
-    const [records, setRecords] = useState(JSON.parse(localStorage.getItem("awardRecords")) || []);
+    // Change initial state to empty array; we will fetch from Supabase
+    const [records, setRecords] = useState([]); 
     const [showDropdown, setShowDropdown] = useState(false);
     const [showExportDropdown, setShowExportDropdown] = useState(false);
     const [search, setSearch] = useState("");
     const [editIndex, setEditIndex] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const [exportFilters, setExportFilters] = useState({
         batch: "", semester: "", year: "", studentId: ""
@@ -26,6 +29,25 @@ const Main = () => {
     const userName = sessionStorage.getItem("userName") || "ADMIN";
     const userRole = sessionStorage.getItem("userRole") || "USER"; 
 
+    // --- NEW: FETCH DATA FROM SUPABASE ---
+    const fetchRecords = async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('awardRecords')
+            .select('*');
+        
+        if (error) {
+            console.error("Fetch Error:", error);
+        } else {
+            setRecords(data || []);
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchRecords();
+    }, []);
+
     // --- LOGIC: SYSTEM LOGS ---
     const addLogEntry = (action, details) => {
         const logs = JSON.parse(localStorage.getItem("systemLogs")) || [];
@@ -38,30 +60,53 @@ const Main = () => {
         localStorage.setItem("systemLogs", JSON.stringify([newLog, ...logs]));
     };
 
-    // --- LOGIC: SAVE / UPDATE ---
-    const handleSave = (e) => {
+    // --- LOGIC: SAVE / UPDATE TO SUPABASE ---
+    const handleSave = async (e) => {
         e.preventDefault();
-        // Ensure amount is handled as a number even if blank
         const processedAmount = formData.amount === "" ? 0 : formData.amount;
-        const newRecord = { ...formData, amount: processedAmount, dateReceived: new Date().toLocaleDateString() };
+        const newRecord = { 
+            ...formData, 
+            amount: processedAmount, 
+            dateReceived: formData.dateReceived || new Date().toLocaleDateString() 
+        };
         
-        let updatedRecords = [...records];
-
         if (editIndex !== null) {
-            updatedRecords[editIndex] = newRecord;
+            // Update Supabase
+            const { error } = await supabase
+                .from('awardRecords')
+                .update(newRecord)
+                .eq('studentId', formData.studentId); // Fix: Remove extra quotes if possible
+
+            if (error) {
+                alert("Update Error: " + error.message);
+                return;
+            }
             addLogEntry("UPDATE", `Modified student: ${formData.studentId}`);
-            setEditIndex(null);
         } else {
-            if (records.some(r => r.studentId === formData.studentId)) {
+            // Check existence in Supabase
+            const { data: existing } = await supabase
+                .from('awardRecords')
+                .select('studentId')
+                .eq('studentId', formData.studentId)
+                .single();
+
+            if (existing) {
                 alert("Error: Student ID already exists!");
                 return;
             }
-            updatedRecords.push(newRecord);
+
+            const { error } = await supabase
+                .from('awardRecords')
+                .insert([newRecord]);
+
+            if (error) {
+                alert("Insert Error: " + error.message);
+                return;
+            }
             addLogEntry("CREATE", `Added student: ${formData.studentId}`);
         }
 
-        setRecords(updatedRecords);
-        localStorage.setItem("awardRecords", JSON.stringify(updatedRecords));
+        fetchRecords(); // Refresh list
         resetForm();
         alert("Success: Record saved!");
     };
@@ -71,32 +116,38 @@ const Main = () => {
         setEditIndex(null);
     };
 
-    const handleDelete = (originalIndex) => {
+    const handleDelete = async (originalIndex) => {
         if (window.confirm("Delete this record permanently?")) {
             const targetRecord = records[originalIndex];
-            const updated = records.filter((_, i) => i !== originalIndex);
-            setRecords(updated);
-            localStorage.setItem("awardRecords", JSON.stringify(updated));
+            
+            const { error } = await supabase
+                .from('awardRecords')
+                .delete()
+                .eq('studentId', targetRecord.studentId);
+
+            if (error) {
+                alert("Delete Error: " + error.message);
+                return;
+            }
+
+            fetchRecords(); // Refresh list
             addLogEntry("DELETE", `Removed student: ${targetRecord.studentId}`);
         }
     };
 
     // --- LOGIC: FUZZY IMPORT ---
-    const handleImport = (e) => {
+    const handleImport = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
             const data = new Uint8Array(event.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
-            const existingIds = new Set(records.map(r => String(r.studentId).trim()));
-            let addedCount = 0;
-            let skippedCount = 0;
             const newRecordsToPush = [];
 
             jsonData.forEach(item => {
@@ -108,10 +159,7 @@ const Main = () => {
                 };
 
                 const sId = getVal(["STUDENT ID", "STUDENTID", "ID"]);
-                
-                if (existingIds.has(sId) || !sId) {
-                    skippedCount++;
-                } else {
+                if (sId) {
                     newRecordsToPush.push({
                         batch: getVal(["BATCH"]),
                         awardNo: getVal(["AWARD NO", "AWARDNO", "AWARD #"]),
@@ -126,20 +174,28 @@ const Main = () => {
                         semester: getVal(["SEMESTER"]),
                         amount: Number(getVal(["AMOUNT"]) || 0),
                         scholarshipType: getVal(["SCHOLARSHIP TYPE", "TYPE"]),
-                        dateReceived: getVal(["DATE", "DATE RECEIVED"]) || new Date().toLocaleDateString()
+                        dateReceived: getVal(["DATE", "DATE RECEIVED"]) || new Date().toLocaleDateString(),
+                        barangay: getVal(["BARANGAY", "BRGY"]),
+                         town: getVal(["TOWN", "MUNICIPALITY", "CITY"]),
+                         province: getVal(["PROVINCE"]),
+                          gwa: getVal(["GWA", "AVERAGE", "GRADES"]),
+                          units: getVal(["UNITS"]),
+                         status: getVal(["STATUS"]).toUpperCase() || "PENDING",
+                         remarks: getVal(["REMARKS", "NOTES"])
                     });
-                    addedCount++;
                 }
+                
             });
 
-            if (addedCount > 0) {
-                const updatedTotal = [...records, ...newRecordsToPush];
-                setRecords(updatedTotal);
-                localStorage.setItem("awardRecords", JSON.stringify(updatedTotal));
-                addLogEntry("IMPORT", `Imported ${addedCount} records.`);
-                alert(`Added: ${addedCount}\nSkipped: ${skippedCount}`);
-            } else {
-                alert(`No new records added.`);
+            if (newRecordsToPush.length > 0) {
+                const { error } = await supabase.from('awardRecords').insert(newRecordsToPush);
+                if (error) {
+                    alert("Import Error: " + error.message);
+                } else {
+                    fetchRecords();
+                    addLogEntry("IMPORT", `Imported ${newRecordsToPush.length} records.`);
+                    alert(`Successfully imported ${newRecordsToPush.length} records.`);
+                }
             }
             e.target.value = ""; 
         };
@@ -162,7 +218,14 @@ const Main = () => {
             "Semester": r.semester,
             "Amount": r.amount,
             "Scholarship Type": r.scholarshipType,
-            "Date Received": r.dateReceived
+            "Date Received": r.dateReceived,
+            "Barangay": r.barangay || "",
+            "Town/City": r.town || "",
+            "Province": r.province || "",
+             "GWA": r.gwa || "",
+             "Units": r.units || "",
+             "Status": r.status || "",
+             "Remarks": r.remarks || "",
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(cleanData);
@@ -175,7 +238,7 @@ const Main = () => {
     // --- FILTER LOGIC ---
     const filteredRecords = records.filter(r => {
         const matchesSearch = `${r.studentId} ${r.lastName} ${r.firstName} ${r.program}`.toUpperCase().includes(search.toUpperCase());
-        const matchesBatch = exportFilters.batch === "" || r.batch.toUpperCase().includes(exportFilters.batch.toUpperCase());
+        const matchesBatch = exportFilters.batch === "" || (r.batch && r.batch.toUpperCase().includes(exportFilters.batch.toUpperCase()));
         const matchesSemester = exportFilters.semester === "" || r.semester === exportFilters.semester;
         const matchesStudentId = exportFilters.studentId === "" || r.studentId.includes(exportFilters.studentId);
         const recordYear = r.dateReceived ? r.dateReceived.split('/').pop() : "";
@@ -194,12 +257,12 @@ const Main = () => {
                         <img src="/style/images/sau-logo-rms.png" className="logo" alt="Logo" />
                     </div>
                     <nav className="header-nav">
-                                            <Link to="/main" className="nav-link">Main View</Link>
-                                            <Link to="/Sadmin" className="nav-link">User Control</Link>
-                                            <Link to="/logs" className="nav-link">System Logs</Link>
-                                            <Link to="/bankinfo" className="nav-link">Bank Info</Link>
-                                            <Link to="/dashboard" className="nav-link">Dashboard</Link>
-                                        </nav>
+                        <Link to="/main" className="nav-link">Main View</Link>
+                        <Link to="/Sadmin" className="nav-link">User Control</Link>
+                        <Link to="/logs" className="nav-link">System Logs</Link>
+                        <Link to="/bankinfo" className="nav-link">Bank Info</Link>
+                        <Link to="/dashboard" className="nav-link">Dashboard</Link>
+                    </nav>
                     <div className="header-right">
                         <div className="user-dropdown">
                             <div className="user-badge" onClick={() => setShowDropdown(!showDropdown)}>
@@ -267,7 +330,6 @@ const Main = () => {
                                     <option>1ST SEMESTER</option><option>2ND SEMESTER</option>
                                 </select>
                             </div>
-                            {/* AMOUNT IS NOW OPTIONAL (removed 'required') */}
                             <div className="form-group"><label>Amount</label><input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} /></div>
                             <div className="form-group full-width">
                                 <label>Scholarship Type</label>
@@ -332,6 +394,7 @@ const Main = () => {
                     </div>
 
                     <div className="table-responsive">
+                        {loading ? <p style={{textAlign: 'center', padding: '20px'}}>Loading records...</p> : (
                         <table>
                             <thead>
                                 <tr>
@@ -351,11 +414,10 @@ const Main = () => {
                             </thead>
                             <tbody>
                                 {filteredRecords.length > 0 ? (
-                                    filteredRecords.map((r) => {
-                                        const originalIndex = records.indexOf(r);
+                                    filteredRecords.map((r, i) => {
                                         return (
-                                            <tr key={originalIndex}>
-                                                <td>{originalIndex + 1}</td>
+                                            <tr key={r.studentId || i}>
+                                                <td>{i + 1}</td>
                                                 <td className="batch-cell">{r.batch}</td>
                                                 <td>{r.studentId}</td>
                                                 <td>{r.lastName}</td>
@@ -368,8 +430,8 @@ const Main = () => {
                                                 <td>{r.dateReceived}</td>
                                                 <td className="actions">
                                                     <button className="view" onClick={() => navigate(`/studentprofile?id=${r.studentId}`)} style={{ backgroundColor: '#007bff', color: 'white' }}>View</button>
-                                                    <button className="edit" onClick={() => { setEditIndex(originalIndex); setFormData(r); window.scrollTo(0,0); }}>Edit</button>
-                                                    <button className="delete" onClick={() => handleDelete(originalIndex)}>Del</button>
+                                                    <button className="edit" onClick={() => { setEditIndex(i); setFormData(r); window.scrollTo(0,0); }}>Edit</button>
+                                                    <button className="delete" onClick={() => handleDelete(i)}>Del</button>
                                                 </td>
                                             </tr>
                                         );
@@ -379,6 +441,7 @@ const Main = () => {
                                 )}
                             </tbody>
                         </table>
+                        )}
                     </div>
                 </div>
             </div>
