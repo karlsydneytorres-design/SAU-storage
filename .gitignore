@@ -29,4 +29,4 @@ package-lock.json
 
 pamsu_sau.db
 
-.env
+.env.local
