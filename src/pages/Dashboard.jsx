@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import '../styles/Dashboard.css';
-import '../styles/Main.css'; 
+import '../styles/dashboard.css';
+import '../styles/main.css';
 
 const Dashboard = () => {
     const navigate = useNavigate();

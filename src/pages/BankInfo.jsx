@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import * as XLSX from 'xlsx'; 
 import '../styles/bankinfo.css';
-import '../styles/Main.css'; 
+import '../styles/main.css';
 
 const BankInfo = () => {
     const navigate = useNavigate();

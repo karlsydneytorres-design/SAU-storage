@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import '../style/style.css';
-import '../style/Sadmin.css';
+import '../styles/global.css';
+import '../styles/Sadmin.css';
 
 const Settings = () => {
     const navigate = useNavigate();

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'; // Added useEffect
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabase'; // Import your supabase client
 import * as XLSX from 'xlsx';
-import '../styles/Main.css'; 
+import '../styles/main.css';
 
 const Main = () => {
     const navigate = useNavigate();
